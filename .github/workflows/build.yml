@@ -3,7 +3,10 @@ name: Build Windows Executable
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Cho phép bấm chạy bằng tay trên web
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -37,3 +40,15 @@ jobs:
       with:
         name: MapleBot-Windows
         path: dist/
+        
+    - name: Commit and Push to build folder
+      shell: bash
+      run: |
+        mkdir -p build
+        cp dist/MapleBot.exe build/MapleBot.exe
+        cp src/config.json build/config.json
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add build/
+        git commit -m "Auto-build Windows executable [skip ci]" || echo "No changes to commit"
+        git push
