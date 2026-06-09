@@ -6,31 +6,25 @@
     "potion_mp": "pagedown",
     "buff_1": "insert",
     "move_left": "left",
-    "move_right": "right"
+    "move_right": "right",
+    "move_up": "up",
+    "move_down": "down"
   },
   "delays": {
     "attack_cooldown": 0.5,
     "buff_cooldown": 120.0,
     "min_random_delay": 0.05,
-    "max_random_delay": 0.15
+    "max_random_delay": 0.15,
+    "climb_duration": 2.0
   },
   "patrol": {
-    "patrol_width_pixels": 800,
     "walk_time_before_turn": 3.0,
     "minimap_x_min": 20,
-    "minimap_x_max": 180
+    "minimap_x_max": 180,
+    "minimap_y_min": 20,
+    "minimap_y_max": 120
   },
   "regions": {
-    "hp_bar": [350, 740, 150, 15],
-    "mp_bar": [510, 740, 150, 15],
     "minimap": [10, 30, 200, 150]
-  },
-  "vision": {
-    "hp_threshold_percent": 30,
-    "mp_threshold_percent": 30,
-    "hp_color_lower": [0, 150, 150],
-    "hp_color_upper": [10, 255, 255],
-    "mp_color_lower": [100, 150, 150],
-    "mp_color_upper": [140, 255, 255]
   }
 }
