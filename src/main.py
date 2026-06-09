@@ -3,6 +3,7 @@ import keyboard
 import threading
 import sys
 import os
+import random
 from controller import Controller
 from vision import Vision
 
@@ -58,6 +59,17 @@ def main():
     last_buff_time = 0
     buff_cooldown = ctrl.config["delays"]["buff_cooldown"]
     walk_time = ctrl.config["patrol"]["walk_time_before_turn"]
+    climb_duration = ctrl.config["delays"]["climb_duration"]
+    
+    # Patrol boundaries from minimap
+    x_min = ctrl.config["patrol"]["minimap_x_min"]
+    x_max = ctrl.config["patrol"]["minimap_x_max"]
+    y_min = ctrl.config["patrol"]["minimap_y_min"]
+    y_max = ctrl.config["patrol"]["minimap_y_max"]
+    
+    # Track last known player position
+    last_player_pos = None
+    stuck_counter = 0
 
     try:
         while True:
@@ -72,66 +84,72 @@ def main():
                 print("[State] Auto Buffing")
                 ctrl.buff_1()
                 last_buff_time = current_time
-                time.sleep(1) # wait for animation
+                time.sleep(1)
                 continue
 
-            # 2. State: Vision / Health Check
+            # 2. State: Minimap Wayfinding
             screen_img = vis.capture_screen()
-            
-            hp_percent = vis.get_bar_percent(
-                screen_img, 
-                ctrl.config["regions"]["hp_bar"], 
-                ctrl.config["vision"]["hp_color_lower"], 
-                ctrl.config["vision"]["hp_color_upper"]
-            )
-            mp_percent = vis.get_bar_percent(
-                screen_img, 
-                ctrl.config["regions"]["mp_bar"], 
-                ctrl.config["vision"]["mp_color_lower"], 
-                ctrl.config["vision"]["mp_color_upper"]
-            )
-            
-            if hp_percent < ctrl.config["vision"]["hp_threshold_percent"]:
-                print(f"[State] HP Low ({hp_percent:.1f}%). Using Potion.")
-                ctrl.potion_hp()
-                
-            if mp_percent < ctrl.config["vision"]["mp_threshold_percent"]:
-                print(f"[State] MP Low ({mp_percent:.1f}%). Using Potion.")
-                ctrl.potion_mp()
-                
-            # 2.5 State: Minimap Wayfinding
             minimap_img = vis.extract_minimap(screen_img, ctrl.config["regions"]["minimap"])
             player_pos = vis.find_player_on_minimap(minimap_img)
             
             if player_pos:
                 p_x, p_y = player_pos
-                # Cập nhật hướng đi dựa trên giới hạn của minimap
-                if direction == "right" and p_x > ctrl.config["patrol"]["minimap_x_max"]:
+                
+                # Kiểm tra có bị kẹt không (vị trí không thay đổi sau nhiều vòng lặp)
+                if last_player_pos:
+                    dx = abs(p_x - last_player_pos[0])
+                    dy = abs(p_y - last_player_pos[1])
+                    if dx < 3 and dy < 3:
+                        stuck_counter += 1
+                    else:
+                        stuck_counter = 0
+                
+                last_player_pos = (p_x, p_y)
+                
+                # Nếu bị kẹt quá lâu (> 10 vòng lặp), thử nhảy hoặc đổi hướng
+                if stuck_counter > 10:
+                    print(f"[Patrol] STUCK detected at ({p_x},{p_y})! Trying to escape...")
+                    ctrl.jump()
+                    time.sleep(0.3)
+                    direction = "left" if direction == "right" else "right"
+                    stuck_counter = 0
+                    continue
+                
+                # Logic trục Y: Trèo thang lên nếu nhân vật ở quá thấp, rớt xuống nếu quá cao
+                if p_y > y_max:
+                    print(f"[Patrol] Player too low (Y:{p_y} > {y_max}). Climbing ladder...")
+                    ctrl.climb_ladder(duration=climb_duration)
+                    time.sleep(0.5)
+                    continue
+                elif p_y < y_min:
+                    print(f"[Patrol] Player too high (Y:{p_y} < {y_min}). Dropping down...")
+                    ctrl.drop_down()
+                    time.sleep(0.5)
+                    continue
+                
+                # Logic trục X: Quay đầu khi đụng mép trái/phải
+                if direction == "right" and p_x > x_max:
                     print(f"[Patrol] Reached right boundary (X:{p_x}). Turning left.")
                     direction = "left"
-                elif direction == "left" and p_x < ctrl.config["patrol"]["minimap_x_min"]:
+                elif direction == "left" and p_x < x_min:
                     print(f"[Patrol] Reached left boundary (X:{p_x}). Turning right.")
                     direction = "right"
+                
+                print(f"[Patrol] Pos=({p_x},{p_y}) Dir={direction}")
+            else:
+                print("[Vision] Cannot find player on minimap. Patrolling blind.")
             
             # 3. State: Patrol & Attack
-            print(f"[State] Patrolling {direction} and Attacking")
-            
-            # Walk a bit
+            # Di chuyển theo hướng hiện tại
             if direction == "right":
                 ctrl.walk_right(duration=0.5)
             else:
                 ctrl.walk_left(duration=0.5)
             
-            # Attack a few times
+            # Tấn công trong khi di chuyển
             ctrl.attack()
             time.sleep(0.1)
             ctrl.attack()
-            
-            # Very basic patrol logic without vision (since minimap coords need actual game to test)
-            # Switch direction occasionally
-            if random.random() < 0.2: # 20% chance to turn around after each attack cycle
-                direction = "left" if direction == "right" else "right"
-                print(f"[State] Turning around to {direction}")
             
             # Prevent high CPU usage
             time.sleep(0.1)
@@ -144,6 +162,4 @@ def main():
         print("Bot shutdown complete.")
 
 if __name__ == "__main__":
-    # We need random here for the basic patrol logic demo
-    import random
     main()

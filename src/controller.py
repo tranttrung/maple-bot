@@ -65,3 +65,41 @@ class Controller:
         time.sleep(duration)
         pydirectinput.keyUp(key)
         self.sleep_random()
+
+    def climb_ladder(self, duration=2.0):
+        """
+        Trèo thang: Nhấn giữ phím Up (mũi tên lên) đồng thời nhấn Space (nhảy) để bắt thang,
+        sau đó giữ phím Up để leo lên.
+        """
+        up_key = self.get_key("move_up")
+        jump_key = self.get_key("jump")
+        
+        # Nhấn Space + Up đồng thời để bắt thang
+        pydirectinput.keyDown(up_key)
+        time.sleep(0.05)
+        pydirectinput.keyDown(jump_key)
+        time.sleep(0.1)
+        pydirectinput.keyUp(jump_key)
+        
+        # Giữ phím Up để leo lên trong khoảng thời gian cho trước
+        time.sleep(duration)
+        pydirectinput.keyUp(up_key)
+        self.sleep_random()
+        print("Climbed ladder")
+
+    def drop_down(self):
+        """
+        Rớt xuống tầng dưới: Nhấn phím Down + Space để nhảy xuyên qua sàn.
+        """
+        down_key = self.get_key("move_down")
+        jump_key = self.get_key("jump")
+        
+        pydirectinput.keyDown(down_key)
+        time.sleep(0.05)
+        pydirectinput.keyDown(jump_key)
+        time.sleep(0.1)
+        pydirectinput.keyUp(jump_key)
+        time.sleep(0.1)
+        pydirectinput.keyUp(down_key)
+        self.sleep_random()
+        print("Dropped down")
