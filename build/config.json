@@ -1,0 +1,25 @@
+{
+  "key_bindings": {
+    "attack": "ctrl",
+    "jump": "alt",
+    "potion_hp": "pageup",
+    "potion_mp": "pagedown",
+    "buff_1": "insert",
+    "move_left": "left",
+    "move_right": "right"
+  },
+  "delays": {
+    "attack_cooldown": 0.5,
+    "buff_cooldown": 120.0,
+    "min_random_delay": 0.05,
+    "max_random_delay": 0.15
+  },
+  "patrol": {
+    "patrol_width_pixels": 800,
+    "walk_time_before_turn": 3.0
+  },
+  "vision": {
+    "hp_threshold_percent": 30,
+    "mp_threshold_percent": 30
+  }
+}
