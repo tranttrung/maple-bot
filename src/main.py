@@ -76,10 +76,42 @@ def main():
                 continue
 
             # 2. State: Vision / Health Check
-            # In a full implementation, you would capture screen, check HP bar here
-            # and call ctrl.potion_hp() if needed.
-            # screen_img = vis.capture_screen()
-            # if is_hp_low(screen_img): ctrl.potion_hp()
+            screen_img = vis.capture_screen()
+            
+            hp_percent = vis.get_bar_percent(
+                screen_img, 
+                ctrl.config["regions"]["hp_bar"], 
+                ctrl.config["vision"]["hp_color_lower"], 
+                ctrl.config["vision"]["hp_color_upper"]
+            )
+            mp_percent = vis.get_bar_percent(
+                screen_img, 
+                ctrl.config["regions"]["mp_bar"], 
+                ctrl.config["vision"]["mp_color_lower"], 
+                ctrl.config["vision"]["mp_color_upper"]
+            )
+            
+            if hp_percent < ctrl.config["vision"]["hp_threshold_percent"]:
+                print(f"[State] HP Low ({hp_percent:.1f}%). Using Potion.")
+                ctrl.potion_hp()
+                
+            if mp_percent < ctrl.config["vision"]["mp_threshold_percent"]:
+                print(f"[State] MP Low ({mp_percent:.1f}%). Using Potion.")
+                ctrl.potion_mp()
+                
+            # 2.5 State: Minimap Wayfinding
+            minimap_img = vis.extract_minimap(screen_img, ctrl.config["regions"]["minimap"])
+            player_pos = vis.find_player_on_minimap(minimap_img)
+            
+            if player_pos:
+                p_x, p_y = player_pos
+                # Cập nhật hướng đi dựa trên giới hạn của minimap
+                if direction == "right" and p_x > ctrl.config["patrol"]["minimap_x_max"]:
+                    print(f"[Patrol] Reached right boundary (X:{p_x}). Turning left.")
+                    direction = "left"
+                elif direction == "left" and p_x < ctrl.config["patrol"]["minimap_x_min"]:
+                    print(f"[Patrol] Reached left boundary (X:{p_x}). Turning right.")
+                    direction = "right"
             
             # 3. State: Patrol & Attack
             print(f"[State] Patrolling {direction} and Attacking")

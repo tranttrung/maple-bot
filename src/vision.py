@@ -75,5 +75,33 @@ class Vision:
             return (max_loc[0] + w//2, max_loc[1] + h//2)
         return None
 
-    # TODO: Add functions to read HP/MP bars
-    # This requires cropping the specific HP/MP bar region and calculating the percentage of red/blue pixels
+    def get_bar_percent(self, screen_img, rect, lower_color, upper_color):
+        """
+        Calculate the percentage of a specific color in a rectangular region (like HP or MP bar).
+        rect is [x, y, w, h]
+        """
+        x, y, w, h = rect
+        # Check out of bounds
+        max_y, max_x = screen_img.shape[:2]
+        if y >= max_y or x >= max_x: return 100
+        
+        cropped = screen_img[y:min(y+h, max_y), x:min(x+w, max_x)]
+        if cropped.size == 0: return 100
+        
+        hsv = cv2.cvtColor(cropped, cv2.COLOR_BGR2HSV)
+        
+        # Thêm xử lý đặc biệt cho màu đỏ (HP) vì màu đỏ trên thang HSV nằm ở cả 2 đầu (0-10 và 170-180)
+        # Tạm thời chúng ta dùng dải đơn giản. Tùy theo game có thể cần điều chỉnh dải màu
+        lower = np.array(lower_color)
+        upper = np.array(upper_color)
+        
+        mask = cv2.inRange(hsv, lower, upper)
+        
+        # Đếm số pixel nằm trong dải màu
+        filled_pixels = cv2.countNonZero(mask)
+        total_pixels = w * h
+        
+        if total_pixels == 0: return 100
+        
+        percent = (filled_pixels / total_pixels) * 100
+        return percent

@@ -16,10 +16,21 @@
   },
   "patrol": {
     "patrol_width_pixels": 800,
-    "walk_time_before_turn": 3.0
+    "walk_time_before_turn": 3.0,
+    "minimap_x_min": 20,
+    "minimap_x_max": 180
+  },
+  "regions": {
+    "hp_bar": [350, 740, 150, 15],
+    "mp_bar": [510, 740, 150, 15],
+    "minimap": [10, 30, 200, 150]
   },
   "vision": {
     "hp_threshold_percent": 30,
-    "mp_threshold_percent": 30
+    "mp_threshold_percent": 30,
+    "hp_color_lower": [0, 150, 150],
+    "hp_color_upper": [10, 255, 255],
+    "mp_color_lower": [100, 150, 150],
+    "mp_color_upper": [140, 255, 255]
   }
 }
