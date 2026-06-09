@@ -1,7 +1,7 @@
 {
   "key_bindings": {
-    "attack": "ctrl",
-    "jump": "alt",
+    "attack": "a",
+    "jump": "space",
     "potion_hp": "pageup",
     "potion_mp": "pagedown",
     "buff_1": "insert",
